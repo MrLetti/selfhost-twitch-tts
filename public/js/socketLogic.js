@@ -2,6 +2,9 @@ const socket = io();
 let audioActual = null;
 let volumenLocal = 1.0;
 
+const inputCanal = document.getElementById('inputCanal');
+const btnGuardarCanal = document.getElementById('btnGuardarCanal');
+
 const volSlider = document.getElementById('vol-slider');
 const volText = document.getElementById('vol-text');
 
@@ -28,6 +31,10 @@ const listaBlacklistUsers = document.getElementById('listaBlacklistUsers');
 const listaColaTTS = document.getElementById('listaColaTTS');
 const colaVacíaHTML = '<li style="color:var(--text-muted); justify-content: center; border:none; background:transparent;">Cola vacía</li>';
 
+const btnSubirSonido = document.getElementById('btnSubirSonido');
+const inputNombreSonido = document.getElementById('inputNombreSonido');
+const inputFileAudio = document.getElementById('inputFileAudio');
+
 document.body.addEventListener('click', () => {
     if(!statusBanner.classList.contains('active')) {
         statusBanner.classList.remove('waiting');
@@ -36,6 +43,14 @@ document.body.addEventListener('click', () => {
         bannerText.innerText = 'Sistema TTS Activo y Escuchando';
     }
 }, { once: true });
+btnGuardarCanal.addEventListener('click', () => {
+    const canal = inputCanal.value.trim().replace('#','').toLowerCase();
+    if (canal) {
+        socket.emit('actualizar-canal', canal);
+        btnGuardarCanal.innerText = 'Actualizando...';
+        setTimeout(() => btnGuardarCanal.innerText = 'Conectar', 2000);
+    }
+});
 
 volSlider.addEventListener('input', (e) => {
     const nuevoValor = e.target.value;
@@ -94,6 +109,10 @@ btnAgregarUserFiltro.addEventListener('click', () => {
         socket.emit('agregar-blacklisted-user', username);
         inputUserFiltro.value = '';
     }
+});
+
+socket.on('sincronizar-canal', (canal) => {
+    if (inputCanal) inputCanal.value = canal.replace('#', '');
 });
 
 socket.on('sincronizar-volumen', (volDecimal) => {
@@ -188,4 +207,49 @@ function removerPalabra(word) {
 
 function removerUser(user) {
     socket.emit('remover-blacklisted-user', user);
+}
+
+if (btnSubirSonido) {
+    btnSubirSonido.addEventListener('click', async () => {
+        const archivo = inputFileAudio.files[0];
+        const nombrePersonalizado = inputNombreSonido.value.trim();
+
+        if (!archivo) {
+            alert('Por favor selecciona un archivo de audio (.mp3 o .wav)');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('archivoAudio', archivo);
+        let urlUpload = '/api/upload-sound'
+        if (nombrePersonalizado) {
+            urlUpload += `?nombre=${encodeURIComponent(nombrePersonalizado)}`;
+        }
+
+        btnSubirSonido.innerText = 'Subiendo...';
+        btnSubirSonido.disabled = true;
+
+        try {
+            const respuesta = await fetch(urlUpload, {
+                method: 'POST',
+                body: formData
+            });
+
+            const resultado = await respuesta.json();
+
+            if (resultado.success) {
+                alert(`¡Sonido "${resultado.filename}" subido con éxito!`);
+                inputNombreSonido.value = '';
+                inputFileAudio.value = '';
+            } else {
+                alert('Error al subir: ' + (resultado.error || 'Desconocido'));
+            }
+        } catch (err) {
+            console.error('Error de red al subir sonido:', err);
+            alert('Error de red al intentar subir el archivo.');
+        } finally {
+            btnSubirSonido.innerText = 'Subir y Guardar Sonido';
+            btnSubirSonido.disabled = false;
+        }
+    });
 }

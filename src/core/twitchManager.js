@@ -17,7 +17,7 @@ class TwitchManager {
 
     if (oauthToken && oauthToken.length > 0) {
       clientConfig.identity = {
-        username: this.config.twitch.bot_username,
+        username: this.config.twitch.channel,
         password: oauthToken,
       };
     }
@@ -94,9 +94,13 @@ class TwitchManager {
   
   sendMessage(message) {
     if (this.client && this.client.readyState() === 'OPEN') {
-      this.client.say(this.config.twitch.channel, message).catch(err => {
-        console.error('❌ Error enviando mensaje a Twitch (¿falta el OAuth Token?):', err.message);
-      });
+      try {
+        this.client.say(this.config.twitch.channel, message).catch(err => {
+            console.error('❌ Error enviando mensaje a Twitch:', err);
+        });
+      } catch (e) {
+        console.error('❌ Error crítico al intentar enviar mensaje a Twitch:', e);
+      }
     }
   }
 

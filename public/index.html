@@ -8,7 +8,7 @@
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
     
-    <link rel="stylesheet" href="/css/style.css?v=1.5">
+    <link rel="stylesheet" href="/css/style.css?v=1.6">
     
     <script src="/socket.io/socket.io.js"></script>
 </head>
@@ -20,7 +20,14 @@
     </div>
 
     <div id="control-panel">
-        
+        <div class="card">
+            <h3>📺 Canal de Twitch</h3>
+            <div class="input-group">
+                <input type="text" id="inputCanal" placeholder="Ej: tu_canal...">
+                <button id="btnGuardarCanal" class="btn-primary">Conectar</button>
+            </div>
+        </div>
+
         <div style="display: flex; gap: 10px; width: 100%;">
             <button id="btnLimpieza" class="btn-panico btn-limpieza" style="flex: 1;">🧹 Limpieza de Emergencia</button>
             <button id="btnApagar" class="btn-panico btn-apagado" style="flex: 1;">🛑 Apagar Servidor</button>
@@ -88,7 +95,17 @@
             </div>
 
         </div>
+        <div class="card card-upload">
+            <h3>📤 Subir Nuevo Sonido</h3>
+            <div class="upload-grid">
+                <input type="text" id="inputNombreSonido" placeholder="Nombre para activar (ej: elgato, goku)...">
+                <div class="file-input-wrapper">
+                    <input type="file" id="inputFileAudio" accept=".mp3, .wav">
+                </div>
+                <button id="btnSubirSonido" class="btn-primary btn-upload-full">Subir y Guardar Sonido</button>
+            </div>
+        </div>
     </div>
-    <script src="js/socketLogic.js?v=1.0"></script>
+    <script src="js/socketLogic.js?v=1.6"></script>
 </body>
 </html>

@@ -5,6 +5,26 @@ const path = require('path');
 const fs = require('fs');
 const { getConfig, saveConfig } = require('./config/configManager');
 const { cleanTempFiles } = require('./services/ttsService');
+const multer = require('multer');
+const SOUNDS_FOLDER = path.join(__dirname, '..', 'sounds');
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, SOUNDS_FOLDER); 
+    },
+    filename: (req, file, cb) => {
+        let nombrePersonalizado = req.query.nombre || path.parse(file.originalname).name;
+        nombrePersonalizado = nombrePersonalizado.trim().toLowerCase().replace(/\s+/g, '_');
+
+        const extension = path.extname(file.originalname).toLowerCase();
+        cb(null, `${nombrePersonalizado}${extension}`);
+    }
+});
+
+const upload = multer({ 
+    storage: storage,
+    limits: { fileSize: 8 * 1024 * 1024 } // 8MB por seguridad
+});
 
 function initServer(TEMP_DIR, SOUNDS_FOLDER, queue) {
   const app = express();
@@ -18,6 +38,18 @@ function initServer(TEMP_DIR, SOUNDS_FOLDER, queue) {
   queue.on('change', (itemsPendientes) => {
     io.emit('sincronizar-cola', itemsPendientes);
   });
+  app.post('/api/upload-sound', upload.single('archivoAudio'), (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, error: 'No se subió ningún archivo.' });
+        }
+        console.log(`🎵 Nuevo sonido agregado desde la web: ${req.file.filename}`);
+        res.json({ success: true, filename: req.file.filename });
+    } catch (err) {
+        console.error('❌ Error al subir sonido:', err.message);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
 
   io.on('connection', (socket) => {
     console.log('🟢 OBS conectado al reproductor de audio');
@@ -28,6 +60,7 @@ function initServer(TEMP_DIR, SOUNDS_FOLDER, queue) {
     socket.emit('sincronizar-permisos', currentConfig.tts.solo_subs || false);
     socket.emit('sincronizar-blacklist-words', currentConfig.filters?.blacklisted_words || []);
     socket.emit('sincronizar-blacklist-users', currentConfig.filters?.blacklisted_users || []);
+    socket.emit('sincronizar-canal', currentConfig.twitch.channel || '');
     
     const pendientesIniciales = queue && typeof queue.getItems === 'function' ? queue.getItems() : [];
     socket.emit('sincronizar-cola', pendientesIniciales);
@@ -129,7 +162,14 @@ function initServer(TEMP_DIR, SOUNDS_FOLDER, queue) {
       setTimeout(() => {
         process.exit(0);
       }, 500);
-    })
+    });
+    socket.on('actualizar-canal', (canal) => {
+      const config = getConfig();
+      config.twitch.channel = canal;
+      saveConfig('twitch','channel', canal);
+      io.emit('sincronizar-canal', canal);
+      console.log(`📺 Canal actualizado: ${canal}`);
+    });
 
     socket.on('audio-finished', (item) => {
       if(item && item.tempFiles && item.tempFiles.length > 0){
