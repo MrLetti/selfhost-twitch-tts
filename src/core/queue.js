@@ -1,4 +1,5 @@
-const { EventEmitter } = require('events');
+const EventEmitter = require('events');
+const { getConfig } = require('../config/configManager');
 
 /**
  * Cola FIFO de audio — garantiza que los audios no se superpongan.
@@ -34,17 +35,15 @@ class AudioQueue extends EventEmitter {
     this.currentItem = this.items.shift();
     this.emit('change', this.getItems());
 
-    let delaySegundos = 3;
-    try { delaySegundos = getConfig().tts.delay_seconds !== undefined ? getConfig().tts.delay_seconds : 3; }
-    catch (e) { delaySegundos = 3; }
-    const timePassed = Date.now() - this.currentItem.addedAt;
-    const timeToWait = Math.max(0, (delaySegundos*1000) - timePassed);
-    if(timeToWait > 0){
+    let delaySegundos = 0;
+    try { delaySegundos = getConfig().tts.delay_seconds !== undefined ? getConfig().tts.delay_seconds : 0; }
+    catch (e) { delaySegundos = 0; }
+    if(delaySegundos <= 0){
+      this.emit('play', this.currentItem);
+    }else{
       setTimeout(() => {
         this.emit('play', this.currentItem);
-      }, timeToWait);
-    }else{
-      this.emit('play', this.currentItem);
+      }, delaySegundos*1000);
     }
   }
   finish(itemId){
@@ -67,6 +66,31 @@ class AudioQueue extends EventEmitter {
     if(this.currentItem) lista.push(this.currentItem);
     return lista.concat(this.items);
   }
+  removeItemsByMessageId(msgId){
+    console.log(msgId, this.items)
+    const index = this.items.findIndex(item => item.id === msgId || item.msgId === msgId);
+    console.log(index)
+    if(index !== -1){
+      this.items.splice(index, 1);
+      this.emit('change', this.getItems());
+      return true;
+    }
+    return false;
+  }
+  removeItemsByUsername(username){
+    const cleanUser = username.toLowerCase();
+    const initialLength = this.items.length;
+    this.items = this.items.filter(item => {
+      const itemUser = (item.username || item['display-name'] || '').toLowerCase();
+      return itemUser !== cleanUser;
+    });
+    if(this.items.length !== initialLength){
+      this.emit('change', this.getItems());
+      return true;
+    }
+    return false;
+  }
+    
 
   get size() {
     return this.items.length;

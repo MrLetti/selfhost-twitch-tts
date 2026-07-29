@@ -47,10 +47,17 @@ function resetCooldowns() {
 
 function cleanSpamCharacters(message) {
   return message
-    // Comprime un mismo caracter repetido más de 3 veces (AAAAA -> AA)
     .replace(/(.)\1{3,}/gi, '$1$1')
-    // Comprime un patrón de 2 a 4 letras repetido (jajajaja -> jaja)
-    .replace(/(.{2,4})\1{3,}/gi, '$1$1');
+    .replace(/(.{2,6})\1{3,}/gi, '$1$1');
+}
+function esSpam(message) {
+  if(!message) return false;
+  const simbolos = message.replace(/[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s]/g, '').length;
+  const porcentajeSimbolos = simbolos/message.length;
+  if(porcentajeSimbolos > 0.3) return true;
+  const palabras = message.split(/\s+/);
+  if(palabras.some(palabra => palabra.length > 25)) return true;
+  return false;
 }
 
-module.exports = { shouldSkipMessage, resetCooldowns, cleanSpamCharacters};
+module.exports = { shouldSkipMessage, resetCooldowns, cleanSpamCharacters, esSpam};

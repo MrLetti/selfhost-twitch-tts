@@ -1,6 +1,6 @@
 const { listSounds } = require('../services/soundboard');
 const { getConfig } = require('../config/configManager');
-const { shouldSkipMessage, cleanSpamCharacters } = require('../services/filters');
+const { shouldSkipMessage, cleanSpamCharacters, esSpam } = require('../services/filters');
 const { processAndQueueAudio } = require('../services/ttsService');
 
 function setupTwitchHandlers(twitch, SOUNDS_FOLDER, queue) {
@@ -25,6 +25,7 @@ function setupTwitchHandlers(twitch, SOUNDS_FOLDER, queue) {
     } else if (lower.startsWith('!tts')) {
       contenidoTTS = message.slice(4).trim();
       contenidoTTS = cleanSpamCharacters(contenidoTTS);
+      if(esSpam(contenidoTTS)) return;
       if (contenidoTTS.length === 0) return;
 
       const { skip, reason } = shouldSkipMessage(username, contenidoTTS, config);

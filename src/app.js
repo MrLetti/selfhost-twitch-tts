@@ -4,6 +4,7 @@ const { Server } = require('socket.io');
 const path = require('path');
 const fs = require('fs');
 const { getConfig, guardarConfig } = require('./config/configManager');
+const { limpiarArchivosTemporales } = require('./services/ttsService');
 
 function initServer(TEMP_DIR, SOUNDS_FOLDER, queue) {
   const app = express();
@@ -111,18 +112,20 @@ function initServer(TEMP_DIR, SOUNDS_FOLDER, queue) {
     socket.on('apagar-servidor', () => {
       console.log(`🛑 ¡Apagado de emergencia! Deteniendo servidor...`);
       io.emit('ejecutar-silenciamiento');
+      if (fs.existsSync(TEMP_DIR)) {
+        fs.readdirSync(TEMP_DIR).forEach(f => {
+          try { fs.unlinkSync(path.join(TEMP_DIR, f)); } catch {}
+        });
+      }
       setTimeout(() => {
         process.exit(0);
       }, 500);
     })
 
     socket.on('audio-finished', (item) => {
-      if (item.tempFiles && item.tempFiles.length > 0) {
-        item.tempFiles.forEach(f => {
-          try { fs.unlinkSync(f); } catch {}
-        });
+      if(item && item.tempFiles && item.tempFiles.length > 0){
+        limpiarArchivosTemporales(item.tempFiles);
       }
-
       if (queue && typeof queue.finish === 'function' && item && item.id) {
         queue.finish(item.id);
       } else if (queue && typeof queue.next === 'function') {

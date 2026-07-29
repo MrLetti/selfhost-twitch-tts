@@ -1,6 +1,21 @@
 const path = require('path');
 const { generateTTS, mergeAudioFiles, TEMP_DIR } = require('./tts');
 const { getSoundPath } = require('./soundboard');
+const fs = require('fs');
+
+function limpiarArchivosTemporales(tempFiles){
+  if(!tempFiles || !Array.isArray(tempFiles)) return;
+  tempFiles.forEach(filePath => {
+    try{
+      if(filePath && filePath.startsWith(TEMP_DIR) && fs.existsSync(filePath)){
+        fs.unlinkSync(filePath);
+      }
+    }catch (err){
+      console.error(`❌ Error al eliminar archivo temporal: ${filePath}`, err);
+    }
+  })
+
+}
 
 function parseSegments(text, soundsFolder) {
   const segments = [];
@@ -110,4 +125,4 @@ async function processAndQueueAudio({ username, contenidoTTS, esSonidoRapido, lo
   }
 }
 
-module.exports = { parseSegments, processAndQueueAudio };
+module.exports = { parseSegments, processAndQueueAudio, limpiarArchivosTemporales };

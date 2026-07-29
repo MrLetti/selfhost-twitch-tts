@@ -1,14 +1,13 @@
 const tmi = require('tmi.js');
 
 class TwitchManager {
-  constructor(config) {
-    this.config   = config;
-    this.client   = null;
+  constructor(config, queue, io) {
+    this.config    = config;
+    this.queue     = queue;
+    this.io        = io;
+    this.client    = null;
     this.onMessage = null;
-    this.onMessageDeleted = null;
-    this.onUserPunished = null;
   }
-
 
   async initialize(oauthToken) {
     const clientConfig = {
@@ -27,7 +26,6 @@ class TwitchManager {
 
     this.client.on('message', (channel, tags, message, self) => {
       if (self) return; 
-      console.log(tags);
       if (this.onMessage) {
         this.onMessage({
           id:            tags.id,
@@ -41,21 +39,48 @@ class TwitchManager {
       }
     });
 
-    this.client.on('messageDeleted', (channel, username, deletedMessage, userstate) => {
-      if(this.onMessageDeleted){
-        this.onMessageDeleted(userstate['target-msg-id']);
+    this.client.on('messagedeleted', (channel, username, deletedMessage, tags) => {
+      if(this.queue){
+        const targetMsgId = tags && (tags['target-msg-id'] || tags['id']);
+        if(targetMsgId){
+          const eliminado = this.queue.removeItemsByMessageId(targetMsgId);
+          if(eliminado){
+            console.log(`🗑️ Mensaje de ${username} eliminado. Eliminado de la cola.`);
+          }
+        }
+        if(this.queue.currentItem && (this.queue.currentItem.username || '').toLowerCase() === username.toLowerCase()){
+          if (this.io) this.io.emit('ejecutar-silenciamiento');
+          this.queue.finish(this.queue.currentItem.id);
+        }
       }
     });
+
     this.client.on('timeout', (channel, username, reason, duration, userstate) => {
-      if(this.onUserPunished){
-        this.onUserPunished(username);
+      if(this.queue){
+        const punished = this.queue.removeItemsByUsername(username);
+        if(punished){
+          console.log(`🔨 Usuario castigado (Timeout: ${duration}s) -> ${username}. Sus audios pendientes fueron expulsados de la cola.`);
+        }
+        if(this.queue.currentItem && (this.queue.currentItem.username || '').toLowerCase() === username.toLowerCase()){
+          if (this.io) this.io.emit('ejecutar-silenciamiento');
+          this.queue.finish(this.queue.currentItem.id);
+        }
       }
     });
+
     this.client.on('ban', (channel, username, reason, duration, userstate) => {
-      if(this.onUserPunished){
-        this.onUserPunished(username);
+      if (this.queue){
+        const punished = this.queue.removeItemsByUsername(username);
+        if(punished){
+          console.log(`🚫 Usuario baneado -> ${username}. Sus audios pendientes fueron expulsados de la cola.`);
+        }
+        if(this.queue.currentItem && (this.queue.currentItem.username || '').toLowerCase() === username.toLowerCase()){
+          if (this.io) this.io.emit('ejecutar-silenciamiento');
+          this.queue.finish(this.queue.currentItem.id);
+        }
       }
     });
+
     this.client.on('connected', (addr, port) => {
       console.log(`✅ Twitch: conectado a #${this.config.twitch.channel}`);
     });

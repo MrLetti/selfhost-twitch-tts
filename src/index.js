@@ -24,9 +24,10 @@ watchConfig((newConfig) => {
 });
 
 const queue = new AudioQueue();
-const twitch = new TwitchManager(config);
 
 const { server, io } = initServer(TEMP_DIR, SOUNDS_FOLDER, queue);
+
+const twitch = new TwitchManager(config, queue, io);
 
 setupTwitchHandlers(twitch, SOUNDS_FOLDER, queue);
 
@@ -63,7 +64,7 @@ queue.on('play', async (item) => {
 async function main() {
   console.log('');
   console.log('╔══════════════════════════════════════╗');
-  console.log('║    Self-Host Twitch TTS  🎙️          ║');
+  console.log('║    Self-Host Twitch TTS  🎙️           ║');
   console.log('╚══════════════════════════════════════╝');
   console.log('');
 
