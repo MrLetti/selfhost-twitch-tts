@@ -3,3 +3,4 @@ node_modules/
 temp/*.mp3
 temp/*.wav
 temp/*.aiff
+config.json

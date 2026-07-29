@@ -32,13 +32,23 @@ Sistema **TTS self-hosteable** que lee el chat de Twitch y se reproduce directam
 # 1. Instalar dependencias
 npm install
 
-# 2. Copiar y editar variables de entorno (Opcional)
+# 2. Copiar y editar variables de entorno
+# En Linux / macOS / PowerShell (Windows):
 cp .env.example .env
-# Edita .env y agrega tu TWITCH_OAUTH_TOKEN si quieres que el bot responda en el chat
 
-# 3. Editar configuración
-# Edita config.json con el nombre de tu canal de Twitch
+# En CMD clásico de Windows:
+copy .env.example .env
 
+# *Edita .env y agrega tu TWITCH_OAUTH_TOKEN si quieres que el bot responda en el chat*
+
+# 3. Copiar y editar config.json.example a config.json
+# En Linux / macOS / PowerShell (Windows):
+cp config.json.example config.json
+
+# En CMD clásico de Windows:
+copy config.json.example config.json
+
+# *Edita config.json con el nombre de tu canal de Twitch*
 ```
 
 ---
