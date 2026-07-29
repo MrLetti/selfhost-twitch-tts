@@ -1,5 +1,6 @@
 const EventEmitter = require('events');
 const { getConfig } = require('../config/configManager');
+const { cleanTempFiles } = require('../services/ttsService');
 
 /**
  * Cola FIFO de audio — garantiza que los audios no se superpongan.
@@ -35,19 +36,24 @@ class AudioQueue extends EventEmitter {
     this.currentItem = this.items.shift();
     this.emit('change', this.getItems());
 
-    let delaySegundos = 0;
-    try { delaySegundos = getConfig().tts.delay_seconds !== undefined ? getConfig().tts.delay_seconds : 0; }
-    catch (e) { delaySegundos = 0; }
-    if(delaySegundos <= 0){
+    let delaySeconds = 0;
+    try { 
+      delaySeconds = getConfig().tts.delay_seconds !== undefined ? getConfig().tts.delay_seconds : 0; 
+    } catch (e) { 
+      delaySeconds = 0; 
+    }
+
+    if (delaySeconds <= 0) {
       this.emit('play', this.currentItem);
-    }else{
+    } else {
       setTimeout(() => {
         this.emit('play', this.currentItem);
-      }, delaySegundos*1000);
+      }, delaySeconds * 1000);
     }
   }
-  finish(itemId){
-    if(this.currentItem && this.currentItem.id === itemId){
+
+  finish(itemId) {
+    if (this.currentItem && this.currentItem.id === itemId) {
       this.currentItem = null;
       this.next();
     }
@@ -62,35 +68,44 @@ class AudioQueue extends EventEmitter {
   }
 
   getItems() {
-    const lista = [];
-    if(this.currentItem) lista.push(this.currentItem);
-    return lista.concat(this.items);
+    const list = [];
+    if (this.currentItem) list.push(this.currentItem);
+    return list.concat(this.items);
   }
-  removeItemsByMessageId(msgId){
-    console.log(msgId, this.items)
+
+  removeItemsByMessageId(msgId) {
     const index = this.items.findIndex(item => item.id === msgId || item.msgId === msgId);
-    console.log(index)
-    if(index !== -1){
+    if (index !== -1) {
+      const deletedItem = this.items[index];
+      if (deletedItem.tempFiles) cleanTempFiles(deletedItem.tempFiles);
+      
       this.items.splice(index, 1);
       this.emit('change', this.getItems());
       return true;
     }
     return false;
   }
-  removeItemsByUsername(username){
+
+  removeItemsByUsername(username) {
     const cleanUser = username.toLowerCase();
     const initialLength = this.items.length;
+    
     this.items = this.items.filter(item => {
       const itemUser = (item.username || item['display-name'] || '').toLowerCase();
-      return itemUser !== cleanUser;
+      if (itemUser !== cleanUser) {
+        return true;
+      } else {
+        if (item.tempFiles) cleanTempFiles(item.tempFiles);
+        return false;
+      }
     });
-    if(this.items.length !== initialLength){
+
+    if (this.items.length !== initialLength) {
       this.emit('change', this.getItems());
       return true;
     }
     return false;
   }
-    
 
   get size() {
     return this.items.length;

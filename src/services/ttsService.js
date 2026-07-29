@@ -1,9 +1,8 @@
-const path = require('path');
 const { generateTTS, mergeAudioFiles, TEMP_DIR } = require('./tts');
 const { getSoundPath } = require('./soundboard');
 const fs = require('fs');
 
-function limpiarArchivosTemporales(tempFiles){
+function cleanTempFiles(tempFiles){
   if(!tempFiles || !Array.isArray(tempFiles)) return;
   tempFiles.forEach(filePath => {
     try{
@@ -13,8 +12,7 @@ function limpiarArchivosTemporales(tempFiles){
     }catch (err){
       console.error(`❌ Error al eliminar archivo temporal: ${filePath}`, err);
     }
-  })
-
+  });
 }
 
 function parseSegments(text, soundsFolder) {
@@ -49,12 +47,12 @@ function parseSegments(text, soundsFolder) {
   return segments;
 }
 
-async function processAndQueueAudio({ username, contenidoTTS, esSonidoRapido, lower, config, SOUNDS_FOLDER, queue }) {
+async function processAndQueueAudio({ username, contentTTS, isFastSound, lowerText, config, soundsFolder, queue }) {
   const maxLen = config.tts.max_length || 300;
   
-  if (esSonidoRapido) {
-    const soundName = lower.slice(1).split(' ')[0];
-    const soundPath = getSoundPath(soundName, SOUNDS_FOLDER);
+  if (isFastSound) {
+    const soundName = lowerText.slice(1).split(' ')[0];
+    const soundPath = getSoundPath(soundName, soundsFolder);
     if (soundPath) {
       console.log(`🔊 Sonido rápido: !${soundName} (${username})`);
       queue.add({
@@ -62,17 +60,17 @@ async function processAndQueueAudio({ username, contenidoTTS, esSonidoRapido, lo
         filepath: soundPath,
         name: soundName,
         username: username,
-        contenidoTTS: `!${soundName}`,
+        contentTTS: `!${soundName}`,
       });
     }
     return;
   }
 
-  const trimmed = contenidoTTS.length > maxLen
-    ? contenidoTTS.slice(0, maxLen)
-    : contenidoTTS;
+  const trimmed = contentTTS.length > maxLen
+    ? contentTTS.slice(0, maxLen)
+    : contentTTS;
 
-  const segments = parseSegments(trimmed, SOUNDS_FOLDER);
+  const segments = parseSegments(trimmed, soundsFolder);
   if (segments.length === 0) return;
 
   if (config.tts.say_username) {
@@ -120,9 +118,9 @@ async function processAndQueueAudio({ username, contenidoTTS, esSonidoRapido, lo
       filepath: mergedPath,
       tempFiles: tempFiles,
       username: username,
-      contenidoTTS: trimmed,
+      contentTTS: trimmed,
     });
   }
 }
 
-module.exports = { parseSegments, processAndQueueAudio, limpiarArchivosTemporales };
+module.exports = { parseSegments, processAndQueueAudio, cleanTempFiles };

@@ -17,20 +17,20 @@ function setupTwitchHandlers(twitch, SOUNDS_FOLDER, queue) {
       return;
     }
 
-    let esSonidoRapido = false;
-    let contenidoTTS = "";
+    let isFastSound = false;
+    let contentTTS = "";
 
     if (config.sounds.enabled && lower.startsWith('!') && !lower.startsWith('!tts')) {
-      esSonidoRapido = true;
+      isFastSound = true;
     } else if (lower.startsWith('!tts')) {
-      contenidoTTS = message.slice(4).trim();
-      contenidoTTS = cleanSpamCharacters(contenidoTTS);
-      if(esSpam(contenidoTTS)) return;
-      if (contenidoTTS.length === 0) return;
+      contentTTS = message.slice(4).trim();
+      contentTTS = cleanSpamCharacters(contentTTS);
+      if(isSpam(contentTTS)) return;
+      if (contentTTS.length === 0) return;
 
-      const { skip, reason } = shouldSkipMessage(username, contenidoTTS, config);
+      const { skip, reason } = shouldSkipMessage(username, contentTTS, config);
       if (skip) {
-        console.log(`⏭️  Saltado (${reason}): ${username}: ${contenidoTTS}`);
+        console.log(`⏭️  Saltado (${reason}): ${username}: ${contentTTS}`);
         return;
       }
     } else {
@@ -45,11 +45,11 @@ function setupTwitchHandlers(twitch, SOUNDS_FOLDER, queue) {
     }
     await processAndQueueAudio({
       username,
-      contenidoTTS,
-      esSonidoRapido,
-      lower,
+      contentTTS,
+      isFastSound,
+      lowerText: lower,
       config,
-      SOUNDS_FOLDER,
+      soundsFolder: SOUNDS_FOLDER,
       queue
     });
   };

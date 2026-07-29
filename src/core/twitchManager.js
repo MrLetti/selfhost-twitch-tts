@@ -43,8 +43,8 @@ class TwitchManager {
       if(this.queue){
         const targetMsgId = tags && (tags['target-msg-id'] || tags['id']);
         if(targetMsgId){
-          const eliminado = this.queue.removeItemsByMessageId(targetMsgId);
-          if(eliminado){
+          const deleted = this.queue.removeItemsByMessageId(targetMsgId);
+          if(deleted){
             console.log(`🗑️ Mensaje de ${username} eliminado. Eliminado de la cola.`);
           }
         }

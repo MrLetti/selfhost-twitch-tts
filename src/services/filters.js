@@ -50,14 +50,14 @@ function cleanSpamCharacters(message) {
     .replace(/(.)\1{3,}/gi, '$1$1')
     .replace(/(.{2,6})\1{3,}/gi, '$1$1');
 }
-function esSpam(message) {
+function isSpam(message) {
   if(!message) return false;
-  const simbolos = message.replace(/[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s]/g, '').length;
-  const porcentajeSimbolos = simbolos/message.length;
-  if(porcentajeSimbolos > 0.3) return true;
-  const palabras = message.split(/\s+/);
-  if(palabras.some(palabra => palabra.length > 25)) return true;
+  const symbols = message.replace(/[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s]/g, '').length;
+  const percentageSymbols = symbols/message.length;
+  if(percentageSymbols > 0.3) return true;
+  const words = message.split(/\s+/);
+  if(words.some(word => word.length > 25)) return true;
   return false;
 }
 
-module.exports = { shouldSkipMessage, resetCooldowns, cleanSpamCharacters, esSpam};
+module.exports = { shouldSkipMessage, resetCooldowns, cleanSpamCharacters, isSpam};

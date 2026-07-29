@@ -3,8 +3,8 @@ const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 const fs = require('fs');
-const { getConfig, guardarConfig } = require('./config/configManager');
-const { limpiarArchivosTemporales } = require('./services/ttsService');
+const { getConfig, saveConfig } = require('./config/configManager');
+const { cleanTempFiles } = require('./services/ttsService');
 
 function initServer(TEMP_DIR, SOUNDS_FOLDER, queue) {
   const app = express();
@@ -33,17 +33,17 @@ function initServer(TEMP_DIR, SOUNDS_FOLDER, queue) {
     socket.emit('sincronizar-cola', pendientesIniciales);
 
     socket.on('actualizar-volumen', (volDecimal) => {
-      guardarConfig('tts', 'volume', volDecimal);
+      saveConfig('tts', 'volume', volDecimal);
       io.emit('sincronizar-volumen', volDecimal);
     });
 
     socket.on('actualizar-delay', (nuevosSegundos) => {
-      guardarConfig('tts', 'delay_seconds', nuevosSegundos);
+      saveConfig('tts', 'delay_seconds', nuevosSegundos);
       io.emit('sincronizar-delay', nuevosSegundos);
     });
 
     socket.on('actualizar-permisos', (estadoSoloSubs) => {
-      guardarConfig('tts', 'solo_subs', estadoSoloSubs);
+      saveConfig('tts', 'solo_subs', estadoSoloSubs);
       io.emit('sincronizar-permisos', estadoSoloSubs);
     });
 
@@ -54,7 +54,7 @@ function initServer(TEMP_DIR, SOUNDS_FOLDER, queue) {
       const cleanWord = palabra.toLowerCase().trim();
       if(cleanWord.length > 1 && !config.filters.blacklisted_words.includes(cleanWord)){
         config.filters.blacklisted_words.push(cleanWord);
-        guardarConfig('filters', config.filters);
+        saveConfig('filters', config.filters);
         io.emit('sincronizar-blacklist-words', config.filters.blacklisted_words);
         console.log(`🚫 Palabra añadida al filtro: ${cleanWord}`);
       }
@@ -64,7 +64,7 @@ function initServer(TEMP_DIR, SOUNDS_FOLDER, queue) {
       const config = getConfig();
       if(config.filters && config.filters.blacklisted_words){
         config.filters.blacklisted_words = config.filters.blacklisted_words.filter(w => w !== palabra);
-        guardarConfig('filters', config.filters);
+        saveConfig('filters', config.filters);
         io.emit('sincronizar-blacklist-words', config.filters.blacklisted_words);
         console.log(`🚫 Palabra removida del filtro: ${palabra}`);
       }
@@ -74,7 +74,7 @@ function initServer(TEMP_DIR, SOUNDS_FOLDER, queue) {
       const config = getConfig();
       if(!config.filters) config.filters = {};
       config.filters.blacklisted_words = [];
-      guardarConfig('filters', config.filters);
+      saveConfig('filters', config.filters);
       io.emit('sincronizar-blacklist-words', config.filters.blacklisted_words);
       console.log(`🚫 Filtro de palabras limpiado`);
     });
@@ -86,7 +86,7 @@ function initServer(TEMP_DIR, SOUNDS_FOLDER, queue) {
       const cleanUser = username;
       if(cleanUser.length > 1 && !config.filters.blacklisted_users.includes(cleanUser)){
         config.filters.blacklisted_users.push(cleanUser);
-        guardarConfig('filters', config.filters);
+        saveConfig('filters', config.filters);
         io.emit('sincronizar-blacklist-users', config.filters.blacklisted_users);
         console.log(`🚫 Usuario añadido al filtro: ${cleanUser}`);
       }
@@ -96,7 +96,7 @@ function initServer(TEMP_DIR, SOUNDS_FOLDER, queue) {
       const config = getConfig();
       if(config.filters && config.filters.blacklisted_users){
         config.filters.blacklisted_users = config.filters.blacklisted_users.filter(u => u !== username);
-        guardarConfig('filters', config.filters);
+        saveConfig('filters', config.filters);
         io.emit('sincronizar-blacklist-users', config.filters.blacklisted_users);
         console.log(`🚫 Usuario removido del filtro: ${username}`);
       }
@@ -104,11 +104,20 @@ function initServer(TEMP_DIR, SOUNDS_FOLDER, queue) {
 
     socket.on('activar-limpieza', () => {
       if(queue && typeof queue.clear === 'function'){
-        queue.clear();
+        const items = queue.getItems();
+        items.forEach(item => {
+          if(item && item.tempFiles  && item.tempFiles.length > 0){
+            cleanTempFiles(item.tempFiles);
+          }
+        })
+        if(queue && typeof queue.clear === 'function'){
+          queue.clear();
+        }
       } 
       io.emit('ejecutar-silenciamiento');
-      console.log(`🚫 Modo pánico activado. Cola vaciada y audios cortados.`);
+      console.log(`🚫 Limpieza de Emergencia activada. Cola vaciada y audios cortados.`);
     });
+
     socket.on('apagar-servidor', () => {
       console.log(`🛑 ¡Apagado de emergencia! Deteniendo servidor...`);
       io.emit('ejecutar-silenciamiento');
@@ -124,7 +133,7 @@ function initServer(TEMP_DIR, SOUNDS_FOLDER, queue) {
 
     socket.on('audio-finished', (item) => {
       if(item && item.tempFiles && item.tempFiles.length > 0){
-        limpiarArchivosTemporales(item.tempFiles);
+        cleanTempFiles(item.tempFiles);
       }
       if (queue && typeof queue.finish === 'function' && item && item.id) {
         queue.finish(item.id);
