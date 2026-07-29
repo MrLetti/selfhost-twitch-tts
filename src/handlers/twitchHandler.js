@@ -1,6 +1,6 @@
 const { listSounds } = require('../services/soundboard');
 const { getConfig } = require('../config/configManager');
-const { shouldSkipMessage, cleanSpamCharacters, esSpam } = require('../services/filters');
+const { shouldSkipMessage, cleanSpamCharacters, isSpam } = require('../services/filters');
 const { processAndQueueAudio } = require('../services/ttsService');
 
 function setupTwitchHandlers(twitch, SOUNDS_FOLDER, queue) {
