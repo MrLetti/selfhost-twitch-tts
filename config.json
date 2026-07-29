@@ -1,0 +1,34 @@
+{
+  "twitch": {
+    "channel": "elmismisimoletti",
+    "bot_username": "TwitchTTS_Letti"
+  },
+  "tts": {
+    "engine": "google",
+    "language": "es",
+    "voice": null,
+    "speed": 1,
+    "say_username": true,
+    "max_length": 200,
+    "volume": 0.63,
+    "delay_seconds": 15,
+    "solo_subs": false
+  },
+  "filters": {
+    "skip_commands": false,
+    "skip_urls": true,
+    "user_cooldown_seconds": 0,
+    "blacklisted_users": [],
+    "blacklisted_words": [
+      "maricon",
+      "negro",
+      "nigger",
+      "nigga"
+    ]
+  },
+  "sounds": {
+    "enabled": true,
+    "prefix": "!",
+    "folder": "sounds"
+  }
+}
