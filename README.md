@@ -1,23 +1,30 @@
 # Self-Host Twitch TTS 🎙️
 
-Sistema **TTS self-hosteable** que lee el chat de Twitch y se reproduce directamente en tu PC (ideal para OBS). Sin costo, sin APIs de pago.
+Sistema **TTS self-hosteable** que lee el chat de Twitch y se reproduce directamente en tu PC (ideal para OBS). Sin costo, sin APIs de pago. Incluye un **Panel de Control Web interactivo** para moderación en tiempo real.
 
 ---
 
 ## ✨ Características
 
-- 📢 Lee mensajes con `!tts` del chat de Twitch directamente en tu PC
-- 🎵 **Sonido rápido** con `!nombre_sonido` (sin texto, solo el sonido)
-- 🌐 Motor **Google TTS gratis** (sin API key) o **TTS local** del sistema (RECOMENDADO GOOGLE, LOCAL ES HORRIBLE)
-- 🔇 Filtros configurables: blacklist de usuarios/palabras, cooldown, skip de URLs
-- 🔄 Baja latencia (sin retrasos de Discord), ideal para streams
+- 📢 Lee mensajes con `!tts` del chat de Twitch directamente en tu PC.
+- 🎵 **Sonido rápido** con `!nombre_sonido` (sin texto, solo el sonido) y combinación de sonidos intercalados mediante `(nombre_sonido)`.
+- 🎛️ **Panel de Control Web en Tiempo Real**:
+- Cola visual de mensajes TTS pendientes y en reproducción (máx. 5 en vista).
+- Control deslizante de Volumen Global.
+- Control deslizante de Retraso (**Delay**) dinámico.
+- Interruptor de modo **Solo Subs, VIPs y Mods**.
+- **Filtro de palabras prohibidas** y **Bloqueo de usuarios** interactivos en caliente.
+- 🚨 **Botón de Apagado de Emergencia (Pánico)** para vaciar la cola y silenciar el audio al instante.
+
+- 🌐 Motor **Google TTS gratis** (sin API key) o **TTS local** del sistema.
+- 🔄 Baja latencia, ideal para streams.
 
 ---
 
 ## 📋 Requisitos
 
-- **Node.js 18+** https://nodejs.org/es/download
-- Token de Twitch (opcional — sin él no podrán tirar comandos como !sonidos) https://twitchtokengenerator.com
+- **Node.js 18+** [https://nodejs.org/es/download](https://nodejs.org/es/download)
+- Token de Twitch (opcional — sin él no podrán tirar comandos como !sonidos donde el bot debe responder en el chat) [https://twitchtokengenerator.com](https://twitchtokengenerator.com)
 
 ## 🚀 Instalación
 
@@ -31,6 +38,7 @@ cp .env.example .env
 
 # 3. Editar configuración
 # Edita config.json con el nombre de tu canal de Twitch
+
 ```
 
 ---
@@ -43,7 +51,6 @@ cp .env.example .env
 {
   "twitch": {
     "channel": "tu_canal", // Sin # — nombre de tu canal de Twitch
-    "bot_username": "nombre_bot", // Solo si usas TWITCH_OAUTH_TOKEN
   },
 
   "tts": {
@@ -52,7 +59,8 @@ cp .env.example .env
     "say_username": true, // ¿Decir "Usuario dice: ..." antes del mensaje?
     "max_length": 200, // Caracteres máximos a leer
     "speed": 1.0, // Velocidad de voz (solo engine "local")
-    "volume": 1.0, // Volumen global (0.0 - 1.0) Configurable desde navegador
+    "volume": 1.0, // Volumen global (0.0 - 1.0) Configurable desde el panel web
+    "delay_seconds": 3, // Retraso inicial en segundos antes de reproducir la cola Configurable desde el panel web
   },
 
   "filters": {
@@ -76,7 +84,9 @@ cp .env.example .env
 ## 🎵 Agregar tus propios sonidos
 
 1. Copia tus archivos de audio a la carpeta `/sounds`
-   - Formatos soportados: `.mp3` `.wav` `.ogg` `.flac` `.m4a`
+
+- Formatos soportados: `.mp3` `.wav` `.ogg` `.flac` `.m4a`
+
 2. Úsalos en el chat de Twitch de dos formas:
 
 ### Modo A — Intercalado en TTS
@@ -85,12 +95,14 @@ Escribe `!tts` seguido de tu mensaje, y pon el nombre del sonido entre paréntes
 
 ```
 !tts oye mira esto (krem) qué genial verdad (risa) adiós!
+
 ```
 
 Resultado:
 
 ```
 🔊 TTS: "oye mira esto"  →  🔊 krem.mp3  →  🔊 TTS: "qué genial verdad"  →  🔊 risa.mp3  →  🔊 TTS: "adiós!"
+
 ```
 
 Si el nombre entre paréntesis no corresponde a ningún sonido, lo lee como texto normal.
@@ -100,50 +112,68 @@ Si el nombre entre paréntesis no corresponde a ningún sonido, lo lee como text
 ```
 !krem          →  reproduce krem.mp3 directamente (sin texto)
 !risa          →  reproduce risa.mp3 directamente
+
 ```
 
 **Ejemplos de archivos:**
 
 ```
-/sounds/risa.wav    →  !tts jaja (risa) xd           |   !risa
-/sounds/hype.mp3    →  !tts gana (hype) gg           |   !hype
+/sounds/risa.wav    →  !tts jaja (risa) xd          |   !risa
+/sounds/hype.mp3    →  !tts gana (hype) gg          |   !hype
+
 ```
 
 ---
 
 ## ▶️ Uso
 
-Abrir una consola de windows en la carpeta src del poyecto (click derecho en la carpeta -> abrir con terminal) y escribir:
+Abre una terminal en la carpeta principal del proyecto y arranca el servidor:
 
 ```bash
-node index.js
+npm start
+
 ```
 
-Ingresar al siguiente enlace en navegador:
+### 🖥️ Configuración en OBS y Panel de Control:
+
+1. Abre tu navegador web e ingresa a:
 
 ```
 http://localhost:3000
+
 ```
 
-## y capturar este navegador en OBS. (Hacer pequeña la página para que no se note en el directo)
+_Aquí verás el **Panel de Control interactivo** con los sliders de volumen, delay, filtros en vivo, el botón de pánico y la lista de la cola de pendientes a la derecha._ 2. **Haz clic en el banner superior** de la página para desbloquear y activar el audio del navegador. 3. Agrega esa misma URL (`http://localhost:3000`) como una fuente de **Navegador (Browser Source)** en OBS para que reproduzca los audios en tu directo (puedes ocultarla o hacerla pequeña para que no estorbe visualmente).
+
+---
 
 ## 📁 Estructura del proyecto
 
 ```
-discord-twitch-tts/
+selfhost-twitch-tts/
+├── public/
+│   ├── css/
+│   │   └── style.css        ← Estilos
+│   └── index.html           ← Panel Web de control y reproductor
+├── sounds/                  ←PON TUS SONIDOS AQUÍ
 ├── src/
-│   ├── index.js        ← Entry point, orquesta todo
-│   ├── twitch.js       ← Conexión al chat de Twitch
-│   ├── tts.js          ← Generación de audio TTS
-│   ├── soundboard.js   ← Gestión de sonidos personalizados
-│   ├── queue.js        ← Cola de audio (evita superposición)
-│   └── filters.js      ← Filtros de mensajes
-├── sounds/             ← 🎵 PON TUS SONIDOS AQUÍ
-├── public/             ← 🖥️  Pega la URL de este archivo en OBS para ver el reproductor
-├── temp/               ← Archivos TTS temporales (auto-limpiados)
-├── config.json         ← Toda la configuración
-├── .env                ← Tokens secretos (no subir a git)
+│   ├── config/
+│   │   └── configManager.js ← Gestor de lectura/escritura de configuración
+│   ├── core/
+│   │   ├── queue.js         ← Cola de audio con eventos y sincronización
+│   │   └── twitchManager.js ← Conexión principal al chat de Twitch
+│   ├── handlers/
+│   │   └── twitchHandler.js ← Lógica de comandos (!tts, sonidos, filtros)
+│   ├── services/
+│   │   ├── filters.js       ← Filtros de mensajes, blacklist y permisos
+│   │   ├── soundboard.js    ← Gestión de sonidos personalizados
+│   │   ├── tts.js           ← Generación de audio TTS (Google / Local)
+│   │   └── ttsService.js    ← Procesador y unificador de segmentos de audio
+│   ├── app.js               ← Servidor Express y WebSockets del Panel
+│   └── index.js             ← Entry point, orquesta todo el sistema
+├── temp/                    ← Archivos TTS temporales (auto-limpiados)
+├── config.json              ← Configuración persistente del sistema
+├── .env                     ← Tokens secretos (Twitch OAuth)
+├── .env.example             ← Plantilla de variables de entorno
 └── README.md
 ```
-
----

@@ -26,16 +26,20 @@ function watchConfig(onUpdate) {
   });
 }
 
-function guardarConfig(clave, valor) {
+function guardarConfig(seccion, claveOValor, valorOpcional) {
   try {
     const configParseado = getConfig();
-    
-    if (!configParseado.tts) configParseado.tts = {};
-    configParseado.tts[clave] = valor;
-    
+
+    if (valorOpcional === undefined) {
+      configParseado[seccion] = claveOValor;
+    } else {
+      if (!configParseado[seccion]) configParseado[seccion] = {};
+      configParseado[seccion][claveOValor] = valorOpcional;
+    }
+
     fs.writeFileSync(configPath, JSON.stringify(configParseado, null, 2));
   } catch (err) {
-    console.error(`❌ Error guardando ${clave} en config.json:`, err.message);
+    console.error(`❌ Error guardando configuración:`, err.message);
   }
 }
 

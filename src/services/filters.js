@@ -16,7 +16,11 @@ function shouldSkipMessage(username, message, config) {
     return { skip: true, reason: 'usuario bloqueado' };
   }
 
-  const hasBadWord = filters.blacklisted_words.some(w => lowerMsg.includes(w.toLowerCase()));
+  const hasBadWord = filters.blacklisted_words.some(w => {
+    const normalizedWord = w.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, '');
+    const normalizedMessage = lowerMsg.normalize("NFD").replace(/[\u0300-\u036f]/g, '');
+    return normalizedMessage.includes(normalizedWord);
+  });
   if (hasBadWord) {
     return { skip: true, reason: 'palabra prohibida' };
   }
@@ -41,4 +45,12 @@ function resetCooldowns() {
   userCooldowns.clear();
 }
 
-module.exports = { shouldSkipMessage, resetCooldowns };
+function cleanSpamCharacters(message) {
+  return message
+    // Comprime un mismo caracter repetido más de 3 veces (AAAAA -> AA)
+    .replace(/(.)\1{3,}/gi, '$1$1')
+    // Comprime un patrón de 2 a 4 letras repetido (jajajaja -> jaja)
+    .replace(/(.{2,4})\1{3,}/gi, '$1$1');
+}
+
+module.exports = { shouldSkipMessage, resetCooldowns, cleanSpamCharacters};

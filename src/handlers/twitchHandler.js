@@ -1,31 +1,10 @@
 const { listSounds } = require('../services/soundboard');
 const { getConfig } = require('../config/configManager');
-const { shouldSkipMessage } = require('../services/filters');
+const { shouldSkipMessage, cleanSpamCharacters } = require('../services/filters');
 const { processAndQueueAudio } = require('../services/ttsService');
-
-const pendingTTS = new Map();
 
 function setupTwitchHandlers(twitch, SOUNDS_FOLDER, queue) {
   
-  twitch.onMessageDeleted = ({ messageId }) => {
-    if (pendingTTS.has(messageId)) {
-      clearTimeout(pendingTTS.get(messageId).timer);
-      pendingTTS.delete(messageId);
-      console.log(`🗑️ TTS Abortado: Un moderador borró el mensaje.`);
-    }
-  };
-
-  twitch.onUserPunished = ({ username }) => {
-    const lowerUser = username.toLowerCase();
-    for (const [messageId, data] of pendingTTS.entries()) {
-      if (data.username === lowerUser) {
-        clearTimeout(data.timer);
-        pendingTTS.delete(messageId);
-        console.log(`🗑️ TTS Abortado: Un moderador castigó a ${username}`);
-      }
-    }
-  };
-
   twitch.onMessage = async ({ id, username, message, isSub, isMod, isBroadcaster }) => {
     const config = getConfig();
     const lower = message.toLowerCase().trim();
@@ -45,6 +24,7 @@ function setupTwitchHandlers(twitch, SOUNDS_FOLDER, queue) {
       esSonidoRapido = true;
     } else if (lower.startsWith('!tts')) {
       contenidoTTS = message.slice(4).trim();
+      contenidoTTS = cleanSpamCharacters(contenidoTTS);
       if (contenidoTTS.length === 0) return;
 
       const { skip, reason } = shouldSkipMessage(username, contenidoTTS, config);
@@ -55,34 +35,22 @@ function setupTwitchHandlers(twitch, SOUNDS_FOLDER, queue) {
     } else {
       return;
     }
+    
     const hasPrivilegies = isSub || isMod || isBroadcaster;
     
     if (config.tts.solo_subs && !hasPrivilegies) {
       console.log(`🔒 Bloqueado: ${username} intentó usar TTS, pero el chat está en Solo Subs.`);
       return;
     }
-    const rawDelay = config.tts.delay_seconds !== undefined ? config.tts.delay_seconds : 5;
-    const delayMs = Number(rawDelay) * 1000;
-    
-
-    const ejecutarAudio = async () => {
-      pendingTTS.delete(id);
-      await processAndQueueAudio({
-        username,
-        contenidoTTS,
-        esSonidoRapido,
-        lower,
-        config,
-        SOUNDS_FOLDER,
-        queue
-      });
-    };
-    if (delayMs > 0) {
-      const timer = setTimeout(ejecutarAudio, delayMs);
-      pendingTTS.set(id, { timer, username: username.toLowerCase() });
-    } else {
-      ejecutarAudio();
-    }
+    await processAndQueueAudio({
+      username,
+      contenidoTTS,
+      esSonidoRapido,
+      lower,
+      config,
+      SOUNDS_FOLDER,
+      queue
+    });
   };
 }
 

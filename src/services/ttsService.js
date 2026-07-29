@@ -42,13 +42,19 @@ async function processAndQueueAudio({ username, contenidoTTS, esSonidoRapido, lo
     const soundPath = getSoundPath(soundName, SOUNDS_FOLDER);
     if (soundPath) {
       console.log(`🔊 Sonido rápido: !${soundName} (${username})`);
-      queue.add({ type: 'sound', filepath: soundPath, name: soundName });
+      queue.add({
+        type: 'sound',
+        filepath: soundPath,
+        name: soundName,
+        username: username,
+        contenidoTTS: `!${soundName}`,
+      });
     }
     return;
   }
 
   const trimmed = contenidoTTS.length > maxLen
-    ? contenidoTTS.slice(0, maxLen) + '...'
+    ? contenidoTTS.slice(0, maxLen)
     : contenidoTTS;
 
   const segments = parseSegments(trimmed, SOUNDS_FOLDER);
@@ -97,7 +103,9 @@ async function processAndQueueAudio({ username, contenidoTTS, esSonidoRapido, lo
     queue.add({
       type: 'merged',
       filepath: mergedPath,
-      tempFiles: tempFiles
+      tempFiles: tempFiles,
+      username: username,
+      contenidoTTS: trimmed,
     });
   }
 }

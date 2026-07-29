@@ -8,7 +8,7 @@
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
     
-    <link rel="stylesheet" href="/css/style.css?v=1.3">
+    <link rel="stylesheet" href="/css/style.css?v=1.5">
     
     <script src="/socket.io/socket.io.js"></script>
 </head>
@@ -21,41 +21,84 @@
 
     <div id="control-panel">
         
-        <!-- SECCIÓN VOLUMEN -->
-        <div class="header-panel">
-            <h3>🎛️ Volumen Global</h3>
-            <span id="vol-text" class="valor-texto">100%</span>
-        </div>
-        <input type="range" id="vol-slider" min="0" max="100" value="100">
-        
-        <hr>
+        <!-- Botón de emergencia abarcando todo el panel por arriba -->
+        <button id="btnPanico" class="btn-panico">🚨 APAGADO DE EMERGENCIA</button>
 
-        <!-- SECCIÓN DELAY -->
-        <div class="header-panel">
-            <h3>⏱️ Retraso (Delay)</h3>
-            <span id="delay-text" class="valor-texto">3s</span>
-        </div>
-        <input type="range" id="delay-slider" min="0" max="15" value="3">
-        
-        <hr>
+        <!-- Inicio de las 2 columnas estrictas -->
+        <div class="layout-columnas">
+            
+            <!-- ====== COLUMNA IZQUIERDA ====== -->
+            <div class="columna-izq">
+                <div class="header-panel">
+                    <h3>🎛️ Volumen Global</h3>
+                    <span id="vol-text" class="valor-texto">100%</span>
+                </div>
+                <input type="range" id="vol-slider" min="0" max="100" value="100">
+                
+                <hr>
 
-        <!-- SECCIÓN PERMISOS -->
-        <div class="toggles-container">
-            <label class="custom-checkbox">
-                <input type="checkbox" id="check-solo-subs">
-                <span class="checkmark"></span>
-                <span class="label-text">🔒Solo Subs, VIPs y Mods</span>
-            </label>
-        </div>
+                <div class="header-panel">
+                    <h3>⏱️ Retraso (Delay)</h3>
+                    <span id="delay-text" class="valor-texto">3s</span>
+                </div>
+                <input type="range" id="delay-slider" min="0" max="15" value="3">
+                
+                <hr>
 
-        <p class="desc">
-            Los ajustes se sincronizan automáticamente con tu bot y con OBS.
-        </p>
+                <div class="toggles-container">
+                    <label class="custom-checkbox">
+                        <input type="checkbox" id="check-solo-subs">
+                        <span class="checkmark"></span>
+                        <span class="label-text">🔒Solo Subs, VIPs y Mods</span>
+                    </label>
+                </div>
+
+                <hr>
+
+                <!-- Tarjetas de filtros apiladas -->
+                <div class="mod-container">
+                    <div class="card">
+                        <h3>Filtro de Palabras</h3>
+                        <div class="input-group">
+                            <input type="text" id="inputPalabraFiltro" placeholder="Ej: groseria...">
+                            <button id="btnAgregarPalabraFiltro" class="btn-primary">Agregar</button>
+                        </div>
+                        <ul id="listaBlacklistWords" class="mod-list"></ul>
+                        <button id="btnLimpiarPalabras" class="btn-danger-outline">Limpiar Todo</button>
+                    </div>
+
+                    <div class="card">
+                        <h3>Usuarios Bloqueados</h3>
+                        <div class="input-group">
+                            <input type="text" id="inputUserFiltro" placeholder="Ej: troll123...">
+                            <button id="btnAgregarUserFiltro" class="btn-primary">Bloquear</button>
+                        </div>
+                        <ul id="listaBlacklistUsers" class="mod-list"></ul>
+                    </div>
+                </div>
+            </div>
+            <!-- ====== FIN COLUMNA IZQUIERDA ====== -->
+
+
+            <!-- ====== COLUMNA DERECHA ====== -->
+            <div class="columna-der">
+                <div class="card card-cola">
+                    <h3>📋 Cola de TTS Pendientes</h3>
+                    <ul id="listaColaTTS" class="mod-list">
+                        <li style="color: var(--text-muted); justify-content: center; border:none; background:transparent;">Cola vacía</li>
+                    </ul>
+                </div>
+            </div>
+            <!-- ====== FIN COLUMNA DERECHA ====== -->
+
+        </div>
     </div>
 
     <script>
         const socket = io();
-        
+        let audioActual = null;
+        let volumenLocal = 1.0;
+
         const volSlider = document.getElementById('vol-slider');
         const volText = document.getElementById('vol-text');
         
@@ -67,9 +110,20 @@
         const statusBanner = document.getElementById('status-banner');
         const bannerIcon = document.getElementById('banner-icon');
         const bannerText = document.getElementById('banner-text');
-        
-        let volumenLocal = 1.0;
+        const btnPanico = document.getElementById('btnPanico');
 
+        const inputPalabraFiltro = document.getElementById('inputPalabraFiltro');
+        const btnAgregarPalabraFiltro = document.getElementById('btnAgregarPalabraFiltro');
+        const listaBlacklistWords = document.getElementById('listaBlacklistWords');
+        const btnLimpiarPalabras = document.getElementById('btnLimpiarPalabras');
+
+        const inputUserFiltro = document.getElementById('inputUserFiltro');
+        const btnAgregarUserFiltro = document.getElementById('btnAgregarUserFiltro');
+        const listaBlacklistUsers = document.getElementById('listaBlacklistUsers');
+
+        const listaColaTTS = document.getElementById('listaColaTTS');
+        const colaVacíaHTML = '<li style="color:var(--text-muted); justify-content: center; border:none; background:transparent;">Cola vacía</li>';
+        
         document.body.addEventListener('click', () => {
             if(!statusBanner.classList.contains('active')) {
                 statusBanner.classList.remove('waiting');
@@ -85,6 +139,49 @@
             socket.emit('actualizar-volumen', nuevoValor / 100);
         });
 
+        delaySlider.addEventListener('input', (e) => {
+            const nuevosSegundos = e.target.value;
+            delayText.innerText = nuevosSegundos + 's';
+            socket.emit('actualizar-delay', parseInt(nuevosSegundos, 10)); 
+        });
+
+        checkSoloSubs.addEventListener('change', (e) => {
+            const activado = e.target.checked;
+            socket.emit('actualizar-permisos', activado);
+        });
+
+         btnAgregarPalabraFiltro.addEventListener('click', () => {
+            const palabra = inputPalabraFiltro.value.trim();
+            if (palabra) {
+                socket.emit('agregar-palabra-filtro', palabra);
+                inputPalabraFiltro.value = '';
+            }
+        });
+
+        btnLimpiarPalabras.addEventListener('click', () => {
+            if (confirm('¿Seguro que quieres limpiar todo el filtro de palabras?')) {
+                socket.emit('limpiar-filtro-palabras');
+            }
+        });
+
+        btnPanico.addEventListener('click', () => {
+            if (audioActual) {
+                audioActual.pause();
+                audioActual.currentTime = 0;
+                audioActual = null;
+            }
+            listaColaTTS.innerHTML = colaVacíaHTML;
+            socket.emit('activar-panico');
+        });
+
+        btnAgregarUserFiltro.addEventListener('click', () => {
+            const username = inputUserFiltro.value.trim().toLowerCase();
+            if (username) {
+                socket.emit('agregar-blacklisted-user', username);
+                inputUserFiltro.value = '';
+            }
+        });
+
         socket.on('sincronizar-volumen', (volDecimal) => {
             volumenLocal = volDecimal;
             const volPorcentaje = Math.round(volDecimal * 100);
@@ -92,40 +189,93 @@
             volText.innerText = volPorcentaje + '%';
         });
 
-        delaySlider.addEventListener('input', (e) => {
-            const nuevosSegundos = e.target.value;
-            delayText.innerText = nuevosSegundos + 's';
-            socket.emit('actualizar-delay', parseInt(nuevosSegundos, 10)); 
-        });
-
         socket.on('sincronizar-delay', (segundos) => {
             delaySlider.value = segundos;
             delayText.innerText = segundos + 's';
-        });
-
-        checkSoloSubs.addEventListener('change', (e) => {
-            const activado = e.target.checked;
-            console.log(activado);
-            socket.emit('actualizar-permisos', activado);
         });
 
         socket.on('sincronizar-permisos', (estadoSoloSubs) => {
             checkSoloSubs.checked = estadoSoloSubs;
         });
 
-        socket.on('play-audio', (data) => {
-            const audio = new Audio(data.url);
-            audio.volume = volumenLocal;
+        socket.on('sincronizar-blacklist-words', (words) => {
+            listaBlacklistWords.innerHTML = '';
+            words.forEach(word => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span>${word}</span>
+                    <button onclick="removerPalabra('${word}')" class="btn-delete">×</button>
+                `;
+                listaBlacklistWords.appendChild(li);
+            });
+        });
 
-            audio.onended = () => {
+        socket.on('sincronizar-blacklist-users', (users) => {
+            listaBlacklistUsers.innerHTML = '';
+            users.forEach(user => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span>${user}</span>
+                    <button onclick="removerUser('${user}')" class="btn-delete">×</button>
+                `;
+                listaBlacklistUsers.appendChild(li);
+            });
+        });
+
+        socket.on('play-audio', (data) => {
+            audioActual = new Audio(data.url);
+            audioActual.volume = volumenLocal;
+
+            audioActual.onended = () => {
+                audioActual = null;
                 socket.emit('audio-finished', data.item);
             };
 
-            audio.play().catch(err => {
+            audioActual.play().catch(err => {
                 console.error("No se pudo reproducir el audio:", err);
                 socket.emit('audio-finished', data.item);
             });
         });
+
+        socket.on('ejecutar-silenciamiento', () => {
+            if (audioActual) {
+                audioActual.pause();
+                audioActual.currentTime = 0;
+                audioActual = null;
+            }
+        });
+
+        socket.on('sincronizar-cola', (colaItems) => {
+            listaColaTTS.innerHTML = '';
+            if (!colaItems || colaItems.length === 0) {
+                listaColaTTS.innerHTML = colaVacíaHTML;
+                return;
+            }
+            const itemsVisibles = colaItems.slice(0, 5);
+            
+            itemsVisibles.forEach((item, index) => {
+                const li = document.createElement('li');
+                console.log(item);
+                const usuario = item.username || item['display-name'];
+                const textoMensaje = item.contenidoTTS || item.message || item.text || item.lower || item.sound || '';
+                li.innerHTML = `
+                    <span style="font-size: 13px;">
+                        <strong>${index === 0 ? '▶️ Sonando:' : `#${index + 1}`}</strong> 
+                        <span style="color: var(--primary);">${usuario}:</span> 
+                        <span style="color: #fff;">${textoMensaje}</span>
+                    </span>
+                `;
+                listaColaTTS.appendChild(li);
+            });
+        });
+
+        function removerPalabra(word) {
+            socket.emit('remover-palabra-filtro', word);
+        }
+
+        function removerUser(user) {
+            socket.emit('remover-blacklisted-user', user);
+        }
     </script>
 </body>
 </html>
