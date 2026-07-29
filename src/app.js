@@ -101,13 +101,20 @@ function initServer(TEMP_DIR, SOUNDS_FOLDER, queue) {
       }
     });
 
-    socket.on('activar-panico', () => {
+    socket.on('activar-limpieza', () => {
       if(queue && typeof queue.clear === 'function'){
         queue.clear();
       } 
       io.emit('ejecutar-silenciamiento');
       console.log(`🚫 Modo pánico activado. Cola vaciada y audios cortados.`);
     });
+    socket.on('apagar-servidor', () => {
+      console.log(`🛑 ¡Apagado de emergencia! Deteniendo servidor...`);
+      io.emit('ejecutar-silenciamiento');
+      setTimeout(() => {
+        process.exit(0);
+      }, 500);
+    })
 
     socket.on('audio-finished', (item) => {
       if (item.tempFiles && item.tempFiles.length > 0) {

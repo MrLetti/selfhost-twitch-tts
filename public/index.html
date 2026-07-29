@@ -21,13 +21,13 @@
 
     <div id="control-panel">
         
-        <!-- Botón de emergencia abarcando todo el panel por arriba -->
-        <button id="btnPanico" class="btn-panico">🚨 APAGADO DE EMERGENCIA</button>
+        <div style="display: flex; gap: 10px; width: 100%;">
+            <button id="btnLimpieza" class="btn-panico btn-limpieza" style="flex: 1;">🧹 Limpieza de Emergencia</button>
+            <button id="btnApagar" class="btn-panico btn-apagado" style="flex: 1;">🛑 Apagar Servidor</button>
+        </div>
 
-        <!-- Inicio de las 2 columnas estrictas -->
         <div class="layout-columnas">
             
-            <!-- ====== COLUMNA IZQUIERDA ====== -->
             <div class="columna-izq">
                 <div class="header-panel">
                     <h3>🎛️ Volumen Global</h3>
@@ -55,7 +55,6 @@
 
                 <hr>
 
-                <!-- Tarjetas de filtros apiladas -->
                 <div class="mod-container">
                     <div class="card">
                         <h3>Filtro de Palabras</h3>
@@ -77,10 +76,8 @@
                     </div>
                 </div>
             </div>
-            <!-- ====== FIN COLUMNA IZQUIERDA ====== -->
 
 
-            <!-- ====== COLUMNA DERECHA ====== -->
             <div class="columna-der">
                 <div class="card card-cola">
                     <h3>📋 Cola de TTS Pendientes</h3>
@@ -89,7 +86,6 @@
                     </ul>
                 </div>
             </div>
-            <!-- ====== FIN COLUMNA DERECHA ====== -->
 
         </div>
     </div>
@@ -110,7 +106,8 @@
         const statusBanner = document.getElementById('status-banner');
         const bannerIcon = document.getElementById('banner-icon');
         const bannerText = document.getElementById('banner-text');
-        const btnPanico = document.getElementById('btnPanico');
+        const btnLimpieza = document.getElementById('btnLimpieza');
+        const btnApagar = document.getElementById('btnApagar');
 
         const inputPalabraFiltro = document.getElementById('inputPalabraFiltro');
         const btnAgregarPalabraFiltro = document.getElementById('btnAgregarPalabraFiltro');
@@ -164,14 +161,20 @@
             }
         });
 
-        btnPanico.addEventListener('click', () => {
+        btnLimpieza.addEventListener('click', () => {
             if (audioActual) {
                 audioActual.pause();
                 audioActual.currentTime = 0;
                 audioActual = null;
             }
             listaColaTTS.innerHTML = colaVacíaHTML;
-            socket.emit('activar-panico');
+            socket.emit('activar-limpieza');
+        });
+
+        btnApagar.addEventListener('click', () => {
+            if (confirm('¿Seguro que quieres apagar el servidor?')) {
+                socket.emit('apagar-servidor');
+            }
         });
 
         btnAgregarUserFiltro.addEventListener('click', () => {
