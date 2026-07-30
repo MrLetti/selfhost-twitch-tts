@@ -30,8 +30,21 @@ Sistema **TTS self-hosteable** que lee el chat de Twitch y se reproduce directam
 
 ---
 
+## ⁉️Como abrir una consola/terminal
+
+### En Windows
+- Desde la barra de direcciones (la más rápida): Abre tu carpeta en el Explorador de Archivos, haz clic en la barra de direcciones en la parte superior (donde dice la ruta de la carpeta), borra el texto, escribe cmd y presiona Enter.
+
+Con el menú contextual: Haz clic derecho en un espacio vacío dentro de la carpeta. Luego, selecciona Abrir Terminal.
+
+### En Linux
+
+- Con el clic derecho (interfaz gráfica): En la gran mayoría de los gestores de archivos (como Nautilus en Ubuntu o Thunar en Linux Mint), simplemente entra a la carpeta, haz clic derecho en un espacio vacío y selecciona la opción Abrir en la terminal (o Open in Terminal).
+
+- Atajo de teclado rápido: Si usas entornos como KDE Plasma (con el gestor Dolphin), puedes simplemente presionar la tecla F4 para desplegar un panel de terminal integrado directamente en la parte inferior de esa misma carpeta.
+
 ## 🚀 Instalación
-En la **carpeta del proyecto**, abrir una consola y ejecutar los siguientes comandos:
+En la **carpeta del proyecto**, abrir una consola(terminal) y ejecutar los siguientes comandos. 
 
 ```bash
 # 1. Instalar dependencias
