@@ -31,6 +31,7 @@ Sistema **TTS self-hosteable** que lee el chat de Twitch y se reproduce directam
 ---
 
 ## 🚀 Instalación
+En la **carpeta del proyecto**, abrir una consola y ejecutar los siguientes comandos:
 
 ```bash
 # 1. Instalar dependencias
