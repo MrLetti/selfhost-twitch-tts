@@ -66,8 +66,27 @@ cp config.json.example config.json
 # En CMD clásico de Windows:
 copy config.json.example config.json
 
-# *Edita config.json con el nombre de tu canal de Twitch*
 ```
+
+## ▶️ Uso
+
+Abre una terminal en la carpeta principal del proyecto y arranca el servidor localmente:
+
+```bash
+npm start
+```
+
+### 🖥️ Configuración en OBS y Panel de Control:
+
+1. Abre tu navegador web e ingresa a:
+
+```text
+http://localhost:3000
+```
+
+_(Aquí verás el **Panel de Control interactivo** con los sliders de volumen, delay, filtros en vivo, el botón de pánico, el Gestor de Sonidos y la lista de la cola a la derecha)._ 2. **Haz clic en el banner superior** de la página para desbloquear y activar el audio del navegador. 3. Agrega esa misma URL (`http://localhost:3000`) como una fuente de **Navegador (Browser Source)** en OBS para que reproduzca los audios en tu directo (puedes ocultarla o hacerla pequeña para que no estorbe visualmente).
+
+---
 
 ---
 
@@ -140,26 +159,6 @@ _(Si el nombre entre paréntesis no corresponde a ningún sonido, lo lee como te
 !krem          →  reproduce krem.mp3 directamente (sin texto)
 !risa          →  reproduce risa.mp3 directamente
 ```
-
----
-
-## ▶️ Uso
-
-Abre una terminal en la carpeta principal del proyecto y arranca el servidor localmente:
-
-```bash
-npm start
-```
-
-### 🖥️ Configuración en OBS y Panel de Control:
-
-1. Abre tu navegador web e ingresa a:
-
-```text
-http://localhost:3000
-```
-
-_(Aquí verás el **Panel de Control interactivo** con los sliders de volumen, delay, filtros en vivo, el botón de pánico, el Gestor de Sonidos y la lista de la cola a la derecha)._ 2. **Haz clic en el banner superior** de la página para desbloquear y activar el audio del navegador. 3. Agrega esa misma URL (`http://localhost:3000`) como una fuente de **Navegador (Browser Source)** en OBS para que reproduzca los audios en tu directo (puedes ocultarla o hacerla pequeña para que no estorbe visualmente).
 
 ---
 
