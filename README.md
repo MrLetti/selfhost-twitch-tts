@@ -2,6 +2,8 @@
 
 Sistema **TTS self-hosteable** que lee el chat de Twitch y se reproduce directamente en tu PC (ideal para OBS). Sin costo, sin APIs de pago. Incluye un **Panel de Control Web interactivo** para moderación en tiempo real.
 
+⚠️ **Aviso importante sobre Hosting:** Este bot está diseñado específicamente para **ejecutarse de forma local en tu PC** (Self-Host) donde utilices OBS. No es compatible con servicios Serverless en la nube ya que requiere conexiones WebSockets persistentes (24/7), lectura de archivos en tiempo real y reproducir el audio directamente en tu hardware local.
+
 ---
 
 ## ✨ Características
@@ -14,7 +16,7 @@ Sistema **TTS self-hosteable** que lee el chat de Twitch y se reproduce directam
   - Control deslizante de Retraso (**Delay**) dinámico.
   - Interruptor de modo **Solo Subs, VIPs y Mods**.
   - **Filtro de palabras prohibidas** y **Bloqueo de usuarios** interactivos en caliente.
-  - 📤 **Carga de nuevos sonidos** directamente desde la interfaz web.
+  - 📂 **Centro de Sonidos (Modal)**: Ventana flotante integrada para subir nuevos audios y eliminar los existentes de manera gráfica sin recargar la página.
   - 🚨 **Botón de Apagado de Emergencia (Pánico)** para vaciar la cola y silenciar el audio al instante.
 - 🌐 Motor **Google TTS gratis** (sin API key) o **TTS local** del sistema.
 - 🔄 Baja latencia, ideal para streams.
@@ -51,7 +53,6 @@ cp config.json.example config.json
 copy config.json.example config.json
 
 # *Edita config.json con el nombre de tu canal de Twitch*
-
 ```
 
 ---
@@ -63,7 +64,7 @@ copy config.json.example config.json
 ```jsonc
 {
   "twitch": {
-    "channel": "tu_canal", // Sin # — nombre de tu canal de Twitch
+    "channel": "tu_canal", // nombre de tu canal de Twitch(usuario sin mayusculas)
   },
 
   "tts": {
@@ -98,7 +99,7 @@ copy config.json.example config.json
 
 Puedes agregar sonidos de dos formas:
 
-1. **Desde la interfaz web:** Sube tu archivo `.mp3` o `.wav` utilizando la tarjeta _"Subir Nuevo Sonido"_ en el panel de control.
+1. **Desde la interfaz web:** Haz clic en el botón principal **"🎵 Abrir Gestor de Sonidos"** en el panel de control y usa la ventana emergente para subir tus archivos `.mp3` o `.wav`. En esta misma ventana podrás gestionar y eliminar los audios antiguos.
 2. **Manualmente:** Copia tus archivos de audio a la carpeta `/sounds` (formatos soportados: `.mp3`, `.wav`, `.ogg`, `.flac`, `.m4a`).
 
 ### Úsalos en el chat de Twitch de dos formas:
@@ -109,14 +110,12 @@ Escribe `!tts` seguido de tu mensaje, y pon el nombre del sonido entre paréntes
 
 ```text
 !tts oye mira esto (krem) qué genial verdad (risa) adiós!
-
 ```
 
 _Resultado:_
 
 ```text
 🔊 TTS: "oye mira esto"  →  🔊 krem.mp3  →  🔊 TTS: "qué genial verdad"  →  🔊 risa.mp3  →  🔊 TTS: "adiós!"
-
 ```
 
 _(Si el nombre entre paréntesis no corresponde a ningún sonido, lo lee como texto normal)._
@@ -126,18 +125,16 @@ _(Si el nombre entre paréntesis no corresponde a ningún sonido, lo lee como te
 ```text
 !krem          →  reproduce krem.mp3 directamente (sin texto)
 !risa          →  reproduce risa.mp3 directamente
-
 ```
 
 ---
 
 ## ▶️ Uso
 
-Abre una terminal en la carpeta principal del proyecto y arranca el servidor:
+Abre una terminal en la carpeta principal del proyecto y arranca el servidor localmente:
 
 ```bash
 npm start
-
 ```
 
 ### 🖥️ Configuración en OBS y Panel de Control:
@@ -146,10 +143,9 @@ npm start
 
 ```text
 http://localhost:3000
-
 ```
 
-_(Aquí verás el **Panel de Control interactivo** con los sliders de volumen, delay, filtros en vivo, el botón de pánico, la subida de sonidos y la lista de la cola a la derecha)._ 2. **Haz clic en el banner superior** de la página para desbloquear y activar el audio del navegador. 3. Agrega esa misma URL (`http://localhost:3000`) como una fuente de **Navegador (Browser Source)** en OBS para que reproduzca los audios en tu directo (puedes ocultarla o hacerla pequeña para que no estorbe visualmente).
+_(Aquí verás el **Panel de Control interactivo** con los sliders de volumen, delay, filtros en vivo, el botón de pánico, el Gestor de Sonidos y la lista de la cola a la derecha)._ 2. **Haz clic en el banner superior** de la página para desbloquear y activar el audio del navegador. 3. Agrega esa misma URL (`http://localhost:3000`) como una fuente de **Navegador (Browser Source)** en OBS para que reproduzca los audios en tu directo (puedes ocultarla o hacerla pequeña para que no estorbe visualmente).
 
 ---
 
@@ -177,12 +173,11 @@ selfhost-twitch-tts/
 │   │   ├── soundboard.js      ← Gestión de sonidos personalizados
 │   │   ├── tts.js             ← Generación de audio TTS (Google / Local)
 │   │   └── ttsService.js      ← Procesador y unificador de segmentos de audio
-│   ├── app.js                 ← Servidor Express, WebSockets y rutas de subida
+│   ├── app.js                 ← Servidor Express, WebSockets y rutas de API
 │   └── index.js               ← Entry point, orquesta todo el sistema
 ├── temp/                      ← Archivos TTS temporales (auto-limpiados)
 ├── config.json                ← Configuración persistente del sistema
 ├── .env                       ← Tokens secretos (Twitch OAuth)
 ├── .env.example               ← Plantilla de variables de entorno
 └── README.md
-
 ```

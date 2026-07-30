@@ -35,6 +35,11 @@ const btnSubirSonido = document.getElementById('btnSubirSonido');
 const inputNombreSonido = document.getElementById('inputNombreSonido');
 const inputFileAudio = document.getElementById('inputFileAudio');
 
+const modalGestor = document.getElementById('modalGestor');
+const btnAbrirGestor = document.getElementById('btnAbrirGestor');
+const btnCerrarGestor = document.getElementById('btnCerrarGestor');
+const listaGestorSonidos = document.getElementById('listaGestorSonidos');
+
 document.body.addEventListener('click', () => {
     if(!statusBanner.classList.contains('active')) {
         statusBanner.classList.remove('waiting');
@@ -252,4 +257,62 @@ if (btnSubirSonido) {
             btnSubirSonido.disabled = false;
         }
     });
+}
+if(btnAbrirGestor && modalGestor){
+    btnAbrirGestor.addEventListener('click', () => {
+        modalGestor.style.display = 'flex';
+        cargarSonidosLocal();
+    });
+    btnCerrarGestor.addEventListener('click', () => {
+        modalGestor.style.display = 'none';
+    });
+    modalGestor.addEventListener('click', (e) => {
+        if(e.target === modalGestor) modalGestor.style.display = 'none';
+    });
+}
+async function cargarSonidosLocal() {
+    listaGestorSonidos.innerHTML = '<li style="justify-content:center; border:none; background:transparent;">Cargando...</li>';
+    try {
+        const respuesta = await fetch('/api/sounds');
+        const data = await respuesta.json();
+
+        if (data.success) {
+            listaGestorSonidos.innerHTML = '';
+            
+            if (data.sounds.length === 0) {
+                listaGestorSonidos.innerHTML = '<li style="color:var(--text-muted); justify-content:center; border:none; background:transparent;">No hay sonidos guardados</li>';
+                return;
+            }
+
+            data.sounds.forEach(sonido => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span style="font-weight: 500;">🎵 ${sonido}</span>
+                    <button onclick="eliminarSonidoFS('${sonido}')" class="btn-delete" title="Eliminar sonido">×</button>
+                `;
+                listaGestorSonidos.appendChild(li);
+            });
+        }
+    } catch (err) {
+        console.error("Error al cargar sonidos:", err);
+        listaGestorSonidos.innerHTML = '<li style="color:#ff5555; justify-content:center; border:none; background:transparent;">Error al cargar</li>';
+    }
+}
+window.eliminarSonidoFS = async function(filename){
+    if (!confirm(`¿Estás seguro de que deseas eliminar el sonido "${filename}"?`)) return;
+    try{
+        const respuesta = await fetch(`/api/sounds/${filename}`, {
+            method: 'DELETE'
+        });
+        const data = await respuesta.json();
+        if(data.success){
+            alert(`Sonido "${filename}" eliminado correctamente`);
+            cargarSonidosLocal();
+        }else{
+            alert('Error al eliminar el sonido: ' + (data.error || 'Desconocido'));
+        }
+    }catch(err){
+        console.error('Error de red al eliminar sonido:', err);
+        alert('Error de red al intentar eliminar el sonido.');
+    }
 }

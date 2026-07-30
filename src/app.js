@@ -49,7 +49,39 @@ function initServer(TEMP_DIR, SOUNDS_FOLDER, queue) {
         console.error('❌ Error al subir sonido:', err.message);
         res.status(500).json({ success: false, error: err.message });
     }
-});
+  });
+
+  app.get('/api/sounds', (req, res) => {
+    try {
+        if (!fs.existsSync(SOUNDS_FOLDER)) {
+            return res.json({ success: true, sounds: [] });
+        }
+        const archivos = fs.readdirSync(SOUNDS_FOLDER).filter(file => {
+            return fs.statSync(path.join(SOUNDS_FOLDER, file)).isFile() && !file.startsWith('.');
+        });
+        res.json({ success: true, sounds: archivos });
+    } catch (error) {
+        console.error("Error leyendo sonidos:", error);
+        res.status(500).json({ success: false, error: 'Error leyendo la carpeta' });
+    }
+  });
+
+  app.delete('/api/sounds/:filename', (req, res) => {
+    const filename = req.params.filename;
+    const filePath = path.join(SOUNDS_FOLDER, filename);
+    try {
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+            console.log(`🗑️ Sonido eliminado: ${filename}`);
+            res.json({ success: true, message: 'Sonido eliminado correctamente' });
+        } else {
+            res.status(404).json({ success: false, error: 'Sonido no encontrado' });
+        }
+    } catch (err) {
+        console.error('❌ Error al eliminar sonido:', err);
+        res.status(500).json({ success: false, error: 'Error al eliminar el sonido' });
+    }
+  });
 
   io.on('connection', (socket) => {
     console.log('🟢 OBS conectado al reproductor de audio');
