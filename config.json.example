@@ -5,11 +5,10 @@
   "tts": {
     "engine": "google",
     "language": "es",
-    "voice": null,
     "speed": 1,
     "say_username": true,
     "max_length": 200,
-    "volume": 0.63,
+    "volume": 1.0,
     "delay_seconds": 0,
     "solo_subs": false
   },
@@ -18,7 +17,7 @@
     "skip_urls": true,
     "user_cooldown_seconds": 0,
     "blacklisted_users": [],
-    "blacklisted_words": []
+    "blacklisted_words": ["negro", "nigger", "nigga", "maricon"]
   },
   "sounds": {
     "enabled": true,
