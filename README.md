@@ -46,24 +46,51 @@ Con el menú contextual: Haz clic derecho en un espacio vacío dentro de la carp
 ## 🚀 Instalación
 En la **carpeta del proyecto**, abrir una consola(terminal) y ejecutar los siguientes comandos. 
 
+Aquí tienes los comandos separados con su explicación para que sean fáciles de copiar y pegar según el sistema operativo:
+
+### 1. Instalar dependencias
+
+Primero, descarga e instala todos los paquetes necesarios para que el proyecto funcione:
+
 ```bash
-# 1. Instalar dependencias
 npm install
 
-# 2. Copiar y editar variables de entorno
-# En Linux / macOS / PowerShell (Windows):
+```
+
+### 2. Configurar variables de entorno
+
+Debes crear tu propio archivo `.env` a partir del archivo de ejemplo. Copia y pega el comando correspondiente a tu terminal:
+
+**Para Linux, macOS o PowerShell (Windows):**
+
+```bash
 cp .env.example .env
 
-# En CMD clásico de Windows:
+```
+
+**Para CMD clásico de Windows:**
+
+```cmd
 copy .env.example .env
 
-# *Edita .env y agrega tu TWITCH_OAUTH_TOKEN si quieres que el bot responda en el chat*
+```
 
-# 3. Copiar y editar config.json.example a config.json
-# En Linux / macOS / PowerShell (Windows):
+> **Nota importante:** Abre el nuevo archivo `.env` que acabas de crear y agrega tu `TWITCH_OAUTH_TOKEN` si deseas que el bot tenga permisos para responder en el chat.
+
+### 3. Configurar el archivo JSON
+
+Por último, necesitas generar tu archivo de configuración `config.json` basándote en el ejemplo. Usa el comando adecuado para tu sistema:
+
+**Para Linux, macOS o PowerShell (Windows):**
+
+```bash
 cp config.json.example config.json
 
-# En CMD clásico de Windows:
+```
+
+**Para CMD clásico de Windows:**
+
+```cmd
 copy config.json.example config.json
 
 ```
