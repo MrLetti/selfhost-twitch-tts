@@ -33,9 +33,9 @@ Sistema **TTS self-hosteable** que lee el chat de Twitch y se reproduce directam
 ## ⁉️Como abrir una consola/terminal
 
 ### En Windows
-- Desde la barra de direcciones (la más rápida): Abre tu carpeta en el Explorador de Archivos, haz clic en la barra de direcciones en la parte superior (donde dice la ruta de la carpeta), borra el texto, escribe cmd y presiona Enter.
+- Desde la barra de direcciones: Abre tu carpeta en el Explorador de Archivos, haz clic en la barra de direcciones en la parte superior (donde dice la ruta de la carpeta), borra el texto, escribe cmd y presiona Enter.
 
-Con el menú contextual: Haz clic derecho en un espacio vacío dentro de la carpeta. Luego, selecciona Abrir Terminal.
+- Con el menú contextual: Haz clic derecho en un espacio vacío dentro de la carpeta. Luego, selecciona Abrir Terminal.
 
 ### En Linux
 
@@ -44,9 +44,10 @@ Con el menú contextual: Haz clic derecho en un espacio vacío dentro de la carp
 - Atajo de teclado rápido: Si usas entornos como KDE Plasma (con el gestor Dolphin), puedes simplemente presionar la tecla F4 para desplegar un panel de terminal integrado directamente en la parte inferior de esa misma carpeta.
 
 ## 🚀 Instalación
-En la **carpeta del proyecto**, abrir una consola(terminal) y ejecutar los siguientes comandos. 
 
-Aquí tienes los comandos separados con su explicación para que sean fáciles de copiar y pegar según el sistema operativo:
+> Todo lo relacionado a copiar y pegar, también se puede hacer a mano con interfaz gráfica y cambiando el nombre. Decisión del usuario de como hacer este procedimiento
+
+En la **carpeta del proyecto**, abrir una consola(terminal) y ejecutar los siguientes comandos. 
 
 ### 1. Instalar dependencias
 
@@ -61,7 +62,7 @@ npm install
 
 Debes crear tu propio archivo `.env` a partir del archivo de ejemplo. Copia y pega el comando correspondiente a tu terminal:
 
-**Para Linux, macOS o PowerShell (Windows):**
+**Para Linux, macOS o PowerShell:**
 
 ```bash
 cp .env.example .env
